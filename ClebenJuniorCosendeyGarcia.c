@@ -64,10 +64,10 @@ void divide(NO* pai, int i, NO* filho){
 
 void insercaoNaoCheio(NO* no, int ch){
     printf("to na funcao insercao nao cheio e ch = %d\n", ch);
-    int i = no->numChaves - 1;
+    int i = no->numChaves;
     if(no->folha){
-        while(i >= 0 && ch < no->chave[i]){
-            no->chave[i + 1] = no->chave[i];
+        while(i > 0 && ch < no->chave[i - 1]){
+            no->chave[i] = no->chave[i - 1];
             i--;
         }
 
@@ -75,7 +75,7 @@ void insercaoNaoCheio(NO* no, int ch){
         no->numChaves++;
     }
     else{
-        while(i>=0 && ch < no->chave[i])
+        while(i > 0 && ch < no->chave[i - 1])
             i--;
         
         i++;
