@@ -3,11 +3,12 @@
 #include <stdbool.h>
 
 #define t 3
+#define MAX (2*t - 1)
 
 typedef int TipoChave;
 
 typedef struct str_no {
-    TipoChave chave[2*t - 1];
+    TipoChave chave[MAX];
     struct str_no* filhos[2*t];
     int numChaves;
     bool folha;
@@ -34,55 +35,71 @@ bool criaArvoreBMais(ArvBMais* arvore){
 
 void divide(NO* pai, int i, NO* filho){
     //aloca e inicializa novo
-    NO* novo = (NO*) malloc (sizeof(NO));
-    novo->folha = filho->folha;
-    novo->numChaves = t - 1;
+    NO* no = (NO*) malloc (sizeof(NO));
+    no->folha = filho->folha;
+    no->numChaves = t - 1;
+    
+    if(no->folha)
+        no->numChaves++;
+    
     int j;
-    for(j = 0; j < novo->numChaves; j++)
-        novo->chave[j]  = filho->chave[j + t];
+    
+    for(j = 0; j < no->numChaves; j++){
+        if(no->folha)
+           no->chave[j]  = filho->chave[j + t - 1];
+        else 
+            no->chave[j]  = filho->chave[j + t];
+    }
     
     if(!(filho->folha)){
         for(j = 0; j < t; j++){
-            novo->filhos[j] = filho->filhos[j + t];
+            no->filhos[j] = filho->filhos[j + t];
         }
     }
+
     //ajusta filho
     filho->numChaves = t - 1;
+
     //ajusta pai
     for(j = pai->numChaves; j > i; j--)
         pai->filhos[j + 1] = pai->filhos[j];
     
-    pai->filhos[i + 1] = novo;
+    pai->filhos[i + 1] = no;
 
     for(j = pai->numChaves - 1; j >= i; j--)
         pai->chave[j + 1] = pai->chave[j];
 
-    pai->chave[i] = filho->chave[t];
-
+    pai->chave[i] = filho->chave[t - 1];
     pai->numChaves++;
 }
 
+
 void insercaoNaoCheio(NO* no, int ch){
     printf("to na funcao insercao nao cheio e ch = %d\n", ch);
-    int i = no->numChaves;
+    int i = no->numChaves - 1;
     if(no->folha){
-        while(i > 0 && ch < no->chave[i - 1]){
-            no->chave[i] = no->chave[i - 1];
+        while(i >= 0 && ch < no->chave[i]){
+            no->chave[i + 1] = no->chave[i];
             i--;
         }
 
-        no->chave[i] = ch;
+        no->chave[i + 1] = ch;
         no->numChaves++;
     }
-    else{
-        while(i > 0 && ch < no->chave[i - 1])
+
+    else {
+        while(i >= 0 && ch < no->chave[i])
             i--;
         
         i++;
 
-        if(no->numChaves == ((2*t) - 1))
+        if(no->filhos[i]->numChaves == MAX){
             divide(no, i, no->filhos[i]);
-    
+
+            if(ch > no->chave[i])
+                i++;
+        }
+
         insercaoNaoCheio(no->filhos[i], ch);
     }
 }
@@ -91,7 +108,7 @@ void insercao(ArvBMais* arvB, int ch){
     printf("inserindo chave: %d\n", ch);
     NO* raiz = arvB->raiz;
 
-    if(raiz->numChaves == ((2*t) - 1)){
+    if(raiz->numChaves == MAX){
         printf("ta cheio\n");
         NO* novo = (NO*) malloc(sizeof(NO));
         arvB->raiz = novo;
@@ -115,51 +132,29 @@ void remocao(ArvBMais* arvB, int ch){
         return;
 }
 
-/*
-void imprime(NO* no, FILE* saida){
-    if(!no){
-        fprintf(saida, "n tem no pra imprimir");
+void imprime(NO* no){    
+    if(!no->numChaves){
+        printf("Vazia");
         return;
     }
 
-    fprintf(saida, "(");
-
+    printf("(");
     int i;
     for(i = 0; i < no->numChaves; i++){
         if(!(no->folha)){
-            imprime(no->filhos[i], saida);
-            
-        }
-        fprintf(saida, "%d", no->chave[i]);
-        
-        if(i < no->numChaves)
-            fprintf(saida, " ");
-
-    }
-    fprintf(saida, ")");
-}
-*/
-
-void imprime(NO* no){    
-    if(!no){
-        printf("n tem no pra imprimir");
-        return;
-    }
-    printf("to na funcao imprime. no chave 0 = %d e no numChaves = %d\n", no->chave[0], no->numChaves);
-
-    printf("(");
-
-    int i;
-    for(i = 0; i < no->numChaves; i++){
-        if(!(no->folha))
             imprime(no->filhos[i]);
-
-        printf("%d", no->chave[i]);
-        
-        if(no->folha == false || i < (no->numChaves - 1))
-            printf(" ");
+            printf(" %d ", no->chave[i]);
         }
-
+        else {
+            printf("%d", no->chave[i]);
+            if(i < no->numChaves - 1){
+                printf(" ");
+            }
+        }
+    }
+    if(!no->folha)
+        imprime(no->filhos[no->numChaves]);
+    
     printf(")");
 }
 
@@ -224,11 +219,7 @@ void leitura(ArvBMais* arvB){
             
             if(comando == 'p'){
                 printf("o comando é p vou tentar imprimir\n");
-                if(arvB->raiz->numChaves == 0)
-                    printf("Vazia");          
-                else
-                    imprime(arvB->raiz);  
-                
+                imprime(arvB->raiz);
                 printf("\n");
             }
 
