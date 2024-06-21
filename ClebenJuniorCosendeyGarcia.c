@@ -19,7 +19,7 @@ typedef struct {
 } ArvBMais;
 
 bool criaArvoreBMais(ArvBMais* arvore){
-    printf("entrei em criaArvB+\n");
+    //printf("entrei em criaArvB+\n");
 
     NO* no;
 
@@ -75,7 +75,7 @@ void divide(NO* pai, int i, NO* filho){
 
 
 void insercaoNaoCheio(NO* no, int ch){
-    printf("to na funcao insercao nao cheio e ch = %d\n", ch);
+    //printf("to na funcao insercao nao cheio e ch = %d\n", ch);
     int i = no->numChaves - 1;
     if(no->folha){
         while(i >= 0 && ch < no->chave[i]){
@@ -105,11 +105,11 @@ void insercaoNaoCheio(NO* no, int ch){
 }
 
 void insercao(ArvBMais* arvB, int ch){
-    printf("inserindo chave: %d\n", ch);
+    //printf("inserindo chave: %d\n", ch);
     NO* raiz = arvB->raiz;
 
     if(raiz->numChaves == MAX){
-        printf("ta cheio\n");
+        //printf("ta cheio\n");
         NO* novo = (NO*) malloc(sizeof(NO));
         arvB->raiz = novo;
         novo->folha = false;
@@ -120,7 +120,7 @@ void insercao(ArvBMais* arvB, int ch){
     }
     
     else {
-        printf("nao ta cheio\n");
+        //printf("nao ta cheio\n");
         insercaoNaoCheio(raiz, ch);
     }
 }
@@ -132,6 +132,35 @@ void remocao(ArvBMais* arvB, int ch){
         return;
 }
 
+//pra imprimir em arquivo
+void imprime(NO* no, FILE* saida){    
+    if(!no->numChaves){
+        fprintf(saida, "Vazia");
+        return;
+    }
+
+    fprintf(saida, "(");
+    int i;
+    for(i = 0; i < no->numChaves; i++){
+        if(!(no->folha)){
+            imprime(no->filhos[i], saida);
+            fprintf(saida, " %d ", no->chave[i]);
+        }
+        else {
+            fprintf(saida, "%d", no->chave[i]);
+            if(i < no->numChaves - 1){
+                fprintf(saida, " ");
+            }
+        }
+    }
+    if(!no->folha)
+        imprime(no->filhos[no->numChaves], saida);
+    
+    fprintf(saida, ")");
+}
+
+// pra imprimir no terminal 
+/*
 void imprime(NO* no){    
     if(!no->numChaves){
         printf("Vazia");
@@ -157,31 +186,56 @@ void imprime(NO* no){
     
     printf(")");
 }
-
-/*
-void leitura(ArvBMais* arvB, FILE* entrada, FILE* saida){
-    char comando;
-    int valor;
-    while(true){
-        fscanf(entrada, "%c", &comando);
-        if (comando != 'p')
-            fscanf(entrada, "%d", &valor);
-        
-        if(comando == 'i')
-            insere(&arvB, valor);
-
-        if(comando == 'r') 
-            //remover
-        
-        if(comando == 'p')
-            imprime(arvB->raiz, saida);
-
-        if(comando == 'f')
-            break;
-    }
-}
 */
 
+// pra ler de arquivo
+
+void leitura(ArvBMais* arvB, FILE* entrada, FILE* saida){
+    //printf("funcao leitura\n");
+    char comando;
+    int valor;
+
+    while(true){
+        //printf("insira um comando.\n");
+        fscanf(entrada, "%c", &comando);
+        
+        if(comando != '\n'){
+            //printf("o comando atual é: %c\n", comando);
+            
+            if(comando == 'f')
+                break;
+        
+            if(comando == 'i'){
+                //printf("o comando eh i vou tentar inserir\n");
+
+                //printf("insira um valor\n");
+                fscanf(entrada, "%d", &valor);
+                //printf("o valor atual é: %d\n", valor);
+
+                insercao(arvB, valor);
+            }
+
+            if(comando == 'r'){
+                //printf("o comando eh r vou tentar remover\n");
+
+                //printf("insira um valor\n");
+                fscanf(entrada, "%d", &valor);
+                //printf("o valor atual é: %d\n", valor);
+
+                remocao(arvB, valor);
+            }
+            
+            if(comando == 'p'){
+                //printf("o comando é p vou tentar imprimir\n");
+                imprime(arvB->raiz, saida);
+                fprintf(saida, "\n");
+            }
+        }
+    }
+}
+
+// pra ler do terminal
+/*
 void leitura(ArvBMais* arvB){
     printf("funcao leitura\n");
     char comando;
@@ -227,33 +281,34 @@ void leitura(ArvBMais* arvB){
     }
 
 }
+*/
 
 int main(int argc, char* argv[]){
-    printf("programa funcionando\n");
+    //printf("programa funcionando\n");
 
-    //char* nome_entrada = argv[1];
-    //char* nome_saida = argv[2];
+    char* nome_entrada = argv[1];
+    char* nome_saida = argv[2];
 
-    printf("depois dos chars\n");
+    //printf("depois dos chars\n");
 
-    //FILE* entrada = fopen(nome_entrada, "r");
-    //FILE* saida = fopen(nome_saida, "w");
+    FILE* entrada = fopen(nome_entrada, "r");
+    FILE* saida = fopen(nome_saida, "w");
 
-    printf("depois dos FILEs\n");
+    //printf("depois dos FILEs\n");
 
     ArvBMais* arvBMais = (ArvBMais*) malloc (sizeof(ArvBMais));
 
-    printf("antes da funcao de crir a arvore\n");
+    //printf("antes da funcao de crir a arvore\n");
 
     criaArvoreBMais(arvBMais);
 
-    printf("depois de criaArvB+ e antes de leitura\n");
+    //printf("depois de criaArvB+ e antes de leitura\n");
 
-    //leitura(arvBMais, entrada, saida);
+    leitura(arvBMais, entrada, saida);
     
-    leitura(arvBMais);
+    //leitura(arvBMais);
     
 
-    //fclose(entrada);
-    //fclose(saida);
+    fclose(entrada);
+    fclose(saida);
 }
